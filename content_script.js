@@ -11,14 +11,15 @@ s.onload = function() {
 
 
 var csMovies = {}
-var csMovies_str = ""
-function updateRank(movieName, score)
+var nmMovies = {}
+function updateRank(movieName, score, matchedName)
 {
   csMovies[movieName] = score;
-  //console.log(movieName  + ' has score ' + score + '%');
 
-  //csMovies_str += movieName + ": " + score + '%' + '\n';
-  //renderStatus(csMovies_str)
+  if (matchedName == null)
+    {matchedName = movieName}
+
+  nmMovies[movieName] = matchedName;
 }
 
 function rankMovie(movieName)
@@ -36,16 +37,35 @@ function rankMovie(movieName)
           var responseText = (xmlHttp.responseText);
           var $htmlDoc =  jQuery(responseText)
           var root_script = $htmlDoc.find("div").filter('.container ').find("script").eq(0).text()
-          var re = /[\s\S]*mount.*?get\(0\)\,\s?\'[\w?\s?]+\'\s?\,(.*).*?\);/;
+          var re = /[\s\S]*mount.*?get\(0\)\,\s?\'.*\'\s?\,(.*).*?\);/;
           var dict_str = root_script.match(re)
 
+
+          var idx = -1
           if (dict_str != null && dict_str.length == 2)
           {
             x = JSON.parse(dict_str[1]);
-            score = x.movies[0]['meterScore'];
-            updateRank(movieName, score == null ? "?" : score);
+
+            //See if we can find a perfect match in the name
+            //otherwise we'll just used idx=0
+
+            for (var i = 0, len = x.movies.length; i < len; i++) {
+              if(x.movies[i]['name'] == movieName)
+              {
+                  idx = i;
+                  break;
+              }
+            }
+
+            if (idx != -1)
+            {
+              var score = x.movies[idx]['meterScore'];
+              var name  = x.movies[idx]['name'];
+              updateRank(movieName, score == null ? "?" : score, name);
+            }
           }
-          else
+
+          if (idx == -1)
           {
           	updateRank(movieName, "!");	
           }
@@ -70,7 +90,7 @@ function buildTitleStr(movieName)
 	}
 	else
 	{
-		return buildCntStr(movieName);
+		return nmMovies[movieName] + buildCntStr(movieName);
 	}
 }
 
@@ -85,7 +105,7 @@ for (var i = 0, len = mylinks.length; i < len; i++) {
  	  thisLink.onmouseover = (function(l,t) { 
  	  											return function()
  	  													{ 
-	 	  													l.title 	  = buildTitleStr(t); 
+	 	  													l.title 	    = buildTitleStr(t); 
 	 	  													l.textContent = t + " " + buildCntStr(t);
 	 	  													setTimeout(function(){ l.textContent = t + " " + buildCntStr(t);},3000);
  	  													}
