@@ -90,7 +90,8 @@ function buildTitleStr(movieName)
 	}
 	else
 	{
-		return nmMovies[movieName] + buildCntStr(movieName);
+		//return nmMovies[movieName] +
+    return buildCntStr(movieName);
 	}
 }
 
